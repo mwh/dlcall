@@ -1,6 +1,7 @@
 // dlcall - call a library function from the command line
 // Copyright (C) 2018 Michael Homer
 // Distributed under the GNU GPL version 3+.
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <dlfcn.h>
