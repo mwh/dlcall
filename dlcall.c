@@ -49,6 +49,24 @@ struct argument *get_arguments(int *size, int *return_type, int argc,
             ret[arg++].value.c = argv[i][0];
             continue;
         }
+        if (strcmp("-s", argv[i]) == 0) {
+            i++;
+            ret[arg].type = ARG_STRING;
+            ret[arg++].value.s = argv[i];
+            continue;
+        }
+        if (strcmp("-i", argv[i]) == 0) {
+            i++;
+            ret[arg].type = ARG_INT;
+            ret[arg++].value.i = atoi(argv[i]);
+            continue;
+        }
+        if (strcmp("-d", argv[i]) == 0) {
+            i++;
+            ret[arg].type = ARG_DOUBLE;
+            ret[arg++].value.d = atof(argv[i]);
+            continue;
+        }
         int ival = atoi(argv[i]);
         double dval = atof(argv[i]);
         if (((argv[i][0] >= '0' && argv[i][0] <= '9') || argv[i][0] == '-') &&

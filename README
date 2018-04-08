@@ -1,0 +1,22 @@
+dlcall lets you call C library functions from the command line.
+
+    dlcall strlen "hello world"
+    dlcall sin 2.5
+    dlcall strstr "hello world" " " -r s
+
+Arguments that parse as ints are assumed to be ints, as doubles assumed
+to be doubles, and otherwise treated as strings. The default can be
+overridden with
+
+    -s 1    string "1"
+    -i 1    int 1
+    -c 1    char '1'
+    -d 1    double 1.0
+
+Return types are assumed to be double for functions taking a double and
+int otherwise. The return type can be specified with -r X, for X one of
+the characters sicd above.
+
+dlcall only understands certain function prototypes currently, including
+most string and math functions. Pull requests are welcome to add more
+functions.
