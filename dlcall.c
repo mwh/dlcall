@@ -132,6 +132,11 @@ char *describe_function(char *name, struct argument *args, int argc,
 #define format_INT "%i"
 #define format_STRING "%s"
 #define format_DOUBLE "%f"
+#define NULLARY(rtype) if (return_type == ARG_ ## rtype) {\
+    type_ ## rtype (*f)() = sym; \
+    type_ ## rtype ret = f(); \
+    printf(format_ ## rtype "\n", ret); \
+    return 1; }
 #define UNARY(arg1,rtype) if (args[0].type == ARG_ ## arg1 && return_type == ARG_ ## rtype) {\
     type_ ## rtype (*f)(type_ ## arg1) = sym; \
     type_ ## rtype ret = f(args[0] access_ ## arg1); \
@@ -140,6 +145,11 @@ char *describe_function(char *name, struct argument *args, int argc,
 #define BINARY(arg1,arg2,rtype) if (args[0].type == ARG_ ## arg1 && args[1].type == ARG_ ## arg2 && return_type == ARG_ ## rtype) {\
     type_ ## rtype (*f)(type_ ## arg1, type_ ## arg2) = sym; \
     type_ ## rtype ret = f(args[0] access_ ## arg1,args[1] access_ ## arg2); \
+    printf(format_ ## rtype "\n", ret); \
+    return 1; }
+#define TERNARY(arg1,arg2,arg3,rtype) if (args[0].type == ARG_ ## arg1 && args[1].type == ARG_ ## arg2 && args[2].type == ARG_ ## arg3 && return_type == ARG_ ## rtype) {\
+    type_ ## rtype (*f)(type_ ## arg1, type_ ## arg2, type_ ## arg3) = sym; \
+    type_ ## rtype ret = f(args[0] access_ ## arg1,args[1] access_ ## arg2, args[2] access_ ## arg3); \
     printf(format_ ## rtype "\n", ret); \
     return 1; }
 bool try(void *handle, const char *symbol, int argc, char **argv) {
@@ -157,10 +167,17 @@ bool try(void *handle, const char *symbol, int argc, char **argv) {
             if (args[i].type == ARG_DOUBLE)
                 return_type = ARG_DOUBLE;
     }
-    if (arg_size == 1) {
+    if (arg_size == 0) {
+        NULLARY(STRING);
+        NULLARY(INT);
+        NULLARY(DOUBLE);
+    }
+    else if (arg_size == 1) {
         UNARY(STRING,INT);
         UNARY(STRING, STRING);
         UNARY(DOUBLE, DOUBLE);
+        UNARY(INT, INT);
+        UNARY(CHAR, INT);
     } else if (arg_size == 2) {
         BINARY(STRING, INT, INT);
         BINARY(STRING, STRING, INT);
@@ -170,6 +187,8 @@ bool try(void *handle, const char *symbol, int argc, char **argv) {
         BINARY(STRING, CHAR, STRING);
         BINARY(DOUBLE, INT, DOUBLE);
         BINARY(INT, STRING, INT);
+    } else if (arg_size == 3) {
+        TERNARY(INT, STRING, INT, INT);
     }
     return 0;
 }
@@ -196,6 +215,9 @@ int main(int argc, char **argv) {
         puts("    dlcall strlen \"hello world\"");
         puts("    dlcall strcasecmp hello HELLO");
         puts("    dlcall strchr world -c r -r s");
+        puts("    dlcall getenv HOME -r s");
+        puts("    dlcall write 1 hello 5");
+        puts("    dlcall isalpha -c 6");
         return 0;
     }
     if (!try(RTLD_DEFAULT, argv[1], argc-2, argv + 2)) {
