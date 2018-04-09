@@ -325,8 +325,9 @@ int main(int argc, char **argv) {
         arg_start++;
         nargs--;
     }
-    if (!try(RTLD_DEFAULT, arg_start[0], nargs - 1, arg_start + 1)) {
-        void *handle = dlopen(arg_start[0], RTLD_LAZY);
+    void *handle = dlopen(NULL, 0);
+    if (!try(handle, arg_start[0], nargs - 1, arg_start + 1)) {
+        handle = dlopen(arg_start[0], RTLD_LAZY);
         if (!handle) {
             args = get_arguments(&arg_size, &return_type, nargs-1, arg_start+1);
             fprintf(stderr, "%s: error: Could not call function %s or load %s "
