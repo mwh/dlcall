@@ -9,12 +9,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdarg.h>
 
 #define ARG_DEFAULT 0
 #define ARG_STRING 1
 #define ARG_INT 2
 #define ARG_DOUBLE 3
 #define ARG_CHAR 4
+
+int verbose = 0;
 
 union argvalue {
     char *s;
@@ -120,6 +123,17 @@ char *describe_function(char *name, struct argument *args, int argc,
     return ret;
 }
 
+void log_verbose(char *msg, ...) {
+    if (!verbose)
+        return;
+    va_list args;
+    va_start(args, msg);
+    fprintf(stderr, "dlcall: ");
+    vfprintf(stderr, msg, args);
+    fputs("\n", stderr);
+    va_end(args);
+}
+
 // Macros for defining repetitive prototypes below
 #define type_STRING char*
 #define type_INT int
@@ -152,10 +166,13 @@ char *describe_function(char *name, struct argument *args, int argc,
     type_ ## rtype ret = f(args[0] access_ ## arg1,args[1] access_ ## arg2, args[2] access_ ## arg3); \
     printf(format_ ## rtype "\n", ret); \
     return 1; }
-bool try(void *handle, const char *symbol, int argc, char **argv) {
+#define UNABLE(s) "notice: dlcall does not know how to handle " s " prototype %s. Pull requests are welcome at <https://github.com/mwh/dlcall>."
+bool try(void *handle, char *symbol, int argc, char **argv) {
     void *sym = dlsym(handle, symbol);
-    if (!sym)
+    if (!sym) {
+        log_verbose("no such symbol %s.", symbol);
         return 0;
+    }
     int arg_size = 0;
     int return_type = 0;
     struct argument *args = get_arguments(&arg_size, &return_type, argc, argv);
@@ -171,6 +188,8 @@ bool try(void *handle, const char *symbol, int argc, char **argv) {
         NULLARY(STRING);
         NULLARY(INT);
         NULLARY(DOUBLE);
+        log_verbose(UNABLE("nullary"),
+                describe_function(symbol, args, arg_size, return_type));
     }
     else if (arg_size == 1) {
         UNARY(STRING,INT);
@@ -178,6 +197,8 @@ bool try(void *handle, const char *symbol, int argc, char **argv) {
         UNARY(DOUBLE, DOUBLE);
         UNARY(INT, INT);
         UNARY(CHAR, INT);
+        log_verbose(UNABLE("unary"),
+                describe_function(symbol, args, arg_size, return_type));
     } else if (arg_size == 2) {
         BINARY(STRING, INT, INT);
         BINARY(STRING, STRING, INT);
@@ -187,8 +208,15 @@ bool try(void *handle, const char *symbol, int argc, char **argv) {
         BINARY(STRING, CHAR, STRING);
         BINARY(DOUBLE, INT, DOUBLE);
         BINARY(INT, STRING, INT);
+        log_verbose(UNABLE("binary"),
+                describe_function(symbol, args, arg_size, return_type));
     } else if (arg_size == 3) {
         TERNARY(INT, STRING, INT, INT);
+        log_verbose(UNABLE("ternary"),
+                describe_function(symbol, args, arg_size, return_type));
+    } else if (verbose) {
+        fprintf(stderr, "dlcall: notice: unable to handle arity %i.\n",
+                arg_size);
     }
     return 0;
 }
@@ -209,6 +237,7 @@ int main(int argc, char **argv) {
         puts("    -c ARG    ARG is a char argument");
         puts("    -d ARG    ARG is a double argument");
         puts("    -r [sicd] function returns string, int, char, or double");
+        puts("    -v        Enable verbose logging");
         puts("");
         puts("Examples:");
         puts("    dlcall sin 2.5");
@@ -220,21 +249,32 @@ int main(int argc, char **argv) {
         puts("    dlcall isalpha -c 6");
         return 0;
     }
-    if (!try(RTLD_DEFAULT, argv[1], argc-2, argv + 2)) {
-        void *handle = dlopen(argv[1], RTLD_LAZY);
+    char **arg_start = argv + 1;
+    int nargs = argc - 1;
+    if (strcmp(argv[1], "-v") == 0) {
+        verbose = 1;
+        arg_start++;
+        nargs--;
+    }
+    if (!try(RTLD_DEFAULT, arg_start[0], nargs - 1, arg_start + 1)) {
+        void *handle = dlopen(arg_start[0], RTLD_LAZY);
         if (!handle) {
-            args = get_arguments(&arg_size, &return_type, argc-2, argv +2);
-            fprintf(stderr, "Could not call function %s or load %s "
+            args = get_arguments(&arg_size, &return_type, nargs-1, arg_start+1);
+            fprintf(stderr, "%s: error: Could not call function %s or load %s "
                     "as a library.\n",
-                    describe_function(argv[1], args, arg_size, return_type),
-                    argv[1]);
+                    argv[0],
+                    describe_function(arg_start[0], args, arg_size,return_type),
+                    arg_start[0]);
             return 1;
         }
-        if (!try(handle, argv[2], argc-3, argv + 3)) {
-            args = get_arguments(&arg_size, &return_type, argc-3, argv +3);
-            fprintf(stderr, "Could not call function %s from %s.\n",
-                    describe_function(argv[2], args, arg_size, return_type),
+        log_verbose("loaded %s as a library.", arg_start[0]);
+        if (!try(handle, arg_start[1], nargs - 2, arg_start + 1)) {
+            args = get_arguments(&arg_size, &return_type, nargs-2, arg_start+2);
+            fprintf(stderr, "%s: error: Could not call function %s from %s.\n",
+                    argv[0],
+                    describe_function(arg_start[1], args, arg_size,return_type),
                     argv[1]);
+            return 1;
         }
     }
     return 0;
