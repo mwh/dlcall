@@ -146,6 +146,7 @@ void log_verbose(char *msg, ...) {
 #define format_INT "%i"
 #define format_STRING "%s"
 #define format_DOUBLE "%f"
+#define format_CHAR "%c"
 #define NULLARY(rtype) if (return_type == ARG_ ## rtype) {\
     type_ ## rtype (*f)() = sym; \
     type_ ## rtype ret = f(); \
@@ -188,26 +189,94 @@ bool try(void *handle, char *symbol, int argc, char **argv) {
         NULLARY(STRING);
         NULLARY(INT);
         NULLARY(DOUBLE);
+        NULLARY(CHAR);
         log_verbose(UNABLE("nullary"),
                 describe_function(symbol, args, arg_size, return_type));
     }
     else if (arg_size == 1) {
-        UNARY(STRING,INT);
         UNARY(STRING, STRING);
-        UNARY(DOUBLE, DOUBLE);
+        UNARY(STRING, INT);
+        UNARY(STRING, DOUBLE);
+        UNARY(STRING, CHAR);
+        UNARY(INT, STRING);
         UNARY(INT, INT);
+        UNARY(INT, DOUBLE);
+        UNARY(INT, CHAR);
+        UNARY(DOUBLE, STRING);
+        UNARY(DOUBLE, INT);
+        UNARY(DOUBLE, DOUBLE);
+        UNARY(DOUBLE, CHAR);
+        UNARY(CHAR, STRING);
         UNARY(CHAR, INT);
+        UNARY(CHAR, DOUBLE);
+        UNARY(CHAR, CHAR);
         log_verbose(UNABLE("unary"),
                 describe_function(symbol, args, arg_size, return_type));
     } else if (arg_size == 2) {
-        BINARY(STRING, INT, INT);
-        BINARY(STRING, STRING, INT);
         BINARY(STRING, STRING, STRING);
+        BINARY(STRING, STRING, INT);
+        BINARY(STRING, STRING, DOUBLE);
+        BINARY(STRING, STRING, CHAR);
+        BINARY(STRING, INT, STRING);
+        BINARY(STRING, INT, INT);
+        BINARY(STRING, INT, DOUBLE);
+        BINARY(STRING, INT, CHAR);
+        BINARY(STRING, DOUBLE, STRING);
+        BINARY(STRING, DOUBLE, INT);
+        BINARY(STRING, DOUBLE, DOUBLE);
+        BINARY(STRING, DOUBLE, CHAR);
         BINARY(STRING, CHAR, STRING);
-        BINARY(DOUBLE, DOUBLE, DOUBLE);
-        BINARY(STRING, CHAR, STRING);
-        BINARY(DOUBLE, INT, DOUBLE);
+        BINARY(STRING, CHAR, INT);
+        BINARY(STRING, CHAR, DOUBLE);
+        BINARY(STRING, CHAR, CHAR);
+        BINARY(INT, STRING, STRING);
         BINARY(INT, STRING, INT);
+        BINARY(INT, STRING, DOUBLE);
+        BINARY(INT, STRING, CHAR);
+        BINARY(INT, INT, STRING);
+        BINARY(INT, INT, INT);
+        BINARY(INT, INT, DOUBLE);
+        BINARY(INT, INT, CHAR);
+        BINARY(INT, DOUBLE, STRING);
+        BINARY(INT, DOUBLE, INT);
+        BINARY(INT, DOUBLE, DOUBLE);
+        BINARY(INT, DOUBLE, CHAR);
+        BINARY(INT, CHAR, STRING);
+        BINARY(INT, CHAR, INT);
+        BINARY(INT, CHAR, DOUBLE);
+        BINARY(INT, CHAR, CHAR);
+        BINARY(DOUBLE, STRING, STRING);
+        BINARY(DOUBLE, STRING, INT);
+        BINARY(DOUBLE, STRING, DOUBLE);
+        BINARY(DOUBLE, STRING, CHAR);
+        BINARY(DOUBLE, INT, STRING);
+        BINARY(DOUBLE, INT, INT);
+        BINARY(DOUBLE, INT, DOUBLE);
+        BINARY(DOUBLE, INT, CHAR);
+        BINARY(DOUBLE, DOUBLE, STRING);
+        BINARY(DOUBLE, DOUBLE, INT);
+        BINARY(DOUBLE, DOUBLE, DOUBLE);
+        BINARY(DOUBLE, DOUBLE, CHAR);
+        BINARY(DOUBLE, CHAR, STRING);
+        BINARY(DOUBLE, CHAR, INT);
+        BINARY(DOUBLE, CHAR, DOUBLE);
+        BINARY(DOUBLE, CHAR, CHAR);
+        BINARY(CHAR, STRING, STRING);
+        BINARY(CHAR, STRING, INT);
+        BINARY(CHAR, STRING, DOUBLE);
+        BINARY(CHAR, STRING, CHAR);
+        BINARY(CHAR, INT, STRING);
+        BINARY(CHAR, INT, INT);
+        BINARY(CHAR, INT, DOUBLE);
+        BINARY(CHAR, INT, CHAR);
+        BINARY(CHAR, DOUBLE, STRING);
+        BINARY(CHAR, DOUBLE, INT);
+        BINARY(CHAR, DOUBLE, DOUBLE);
+        BINARY(CHAR, DOUBLE, CHAR);
+        BINARY(CHAR, CHAR, STRING);
+        BINARY(CHAR, CHAR, INT);
+        BINARY(CHAR, CHAR, DOUBLE);
+        BINARY(CHAR, CHAR, CHAR);
         log_verbose(UNABLE("binary"),
                 describe_function(symbol, args, arg_size, return_type));
     } else if (arg_size == 3) {
