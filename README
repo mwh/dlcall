@@ -1,8 +1,13 @@
 dlcall lets you call C library functions from the command line.
 
-    dlcall strlen "hello world"
     dlcall sin 2.5
+    dlcall strlen "hello world"
     dlcall strstr "hello world" " " -r s
+    dlcall strcasecmp hello HELLO
+    dlcall strchr world -c r -r s
+    dlcall getenv HOME -r s
+    dlcall write 1 hello 5
+
 
 Arguments that parse as ints are assumed to be ints, as doubles assumed
 to be doubles, and otherwise treated as strings. The default can be
@@ -17,6 +22,11 @@ Return types are assumed to be double for functions taking a double and
 int otherwise. The return type can be specified with -r X, for X one of
 the characters sicd above.
 
+For functions from arbitrary libraries, give the path to the dynamic
+library before the function name.
+
 dlcall only understands certain function prototypes currently, including
 most string and math functions. Pull requests are welcome to add more
 functions.
+
+Build with `make` and put the executable somewhere convenient.
